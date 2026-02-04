@@ -67,6 +67,16 @@ const verifyPassword = (plainPassword, hashedPassword, callback) => {
   bcrypt.compare(plainPassword, hashedPassword, callback);
 };
 
+// ユーザーを削除（IDで）
+const deleteUserById = (id, callback) => {
+  const query = 'DELETE FROM users WHERE id = ?';
+  db.run(query, [id], function(err) {
+    if (err) return callback(err);
+    if (this.changes === 0) return callback(new Error('ユーザーが見つかりません'));
+    callback(null);
+  });
+};
+
 // データベースを閉じる
 const closeDatabase = () => {
   db.close();
@@ -79,5 +89,6 @@ module.exports = {
   getUserByUsername,
   getAllUsers,
   verifyPassword,
+  deleteUserById,
   closeDatabase
 };

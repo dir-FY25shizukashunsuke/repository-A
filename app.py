@@ -103,6 +103,21 @@ def get_users():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
+# ユーザー削除エンドポイント
+@app.route('/api/users/<int:user_id>', methods=['DELETE'])
+def delete_user(user_id):
+    try:
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'error': 'ユーザーが見つかりません'}), 404
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify({'message': 'ユーザーを削除しました', 'user': user.to_dict()}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
 # エラーハンドリング
 @app.errorhandler(404)
 def not_found(e):

@@ -1,0 +1,22 @@
+{
+  "name": "user-registration-app",
+  "version": "1.0.0",
+  "description": "ユーザー登録機能のサンプルアプリケーション（サブモジュール学習用）",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": ["user", "registration"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "sqlite3": "^5.1.6",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.20.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

@@ -23,42 +23,42 @@ app.post('/api/users/register', (req, res) => {
 
   // バリデーション
   if (!username || !email || !password || !passwordConfirm) {
-    return res.status(400).json({ 
-      error: 'すべてのフィールドを入力してください' 
+    return res.status(400).json({
+      error: 'すべてのフィールドを入力してください'
     });
   }
 
   if (password !== passwordConfirm) {
-    return res.status(400).json({ 
-      error: 'パスワードが一致しません' 
+    return res.status(400).json({
+      error: 'パスワードが一致しません'
     });
   }
 
   if (password.length < 6) {
-    return res.status(400).json({ 
-      error: 'パスワードは6文字以上である必要があります' 
+    return res.status(400).json({
+      error: 'パスワードは6文字以上である必要があります'
     });
   }
 
   // メールアドレスの形式をチェック
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
-    return res.status(400).json({ 
-      error: '有効なメールアドレスを入力してください' 
+    return res.status(400).json({
+      error: '有効なメールアドレスを入力してください'
     });
   }
 
   // ユーザーを登録
   db.registerUser(username, email, password, (err, user) => {
     if (err) {
-      return res.status(400).json({ 
-        error: err.message 
+      return res.status(400).json({
+        error: err.message
       });
     }
 
-    res.status(201).json({ 
+    res.status(201).json({
       message: 'ユーザーの登録が成功しました',
-      user 
+      user
     });
   });
 });
@@ -67,12 +67,64 @@ app.post('/api/users/register', (req, res) => {
 app.get('/api/users', (req, res) => {
   db.getAllUsers((err, users) => {
     if (err) {
-      return res.status(500).json({ 
-        error: 'ユーザー一覧取得に失敗しました' 
+      return res.status(500).json({
+        error: 'ユーザー一覧取得に失敗しました'
       });
     }
 
     res.json({ users });
+  });
+});
+
+// ユーザー一件取得エンドポイント
+app.get('/api/users/:id', (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) {
+    return res.status(400).json({ error: '無効なIDです' });
+  }
+
+  db.getUserById(id, (err, user) => {
+    if (err) {
+      if (err.message === 'ユーザーが見つかりません') {
+        return res.status(404).json({ error: err.message });
+      }
+      return res.status(500).json({ error: 'ユーザー情報取得に失敗しました' });
+    }
+    res.json({ user });
+  });
+});
+
+// ユーザー更新エンドポイント (名前とメールのみ)
+app.patch('/api/users/:id', (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const { username, email } = req.body;
+
+  if (isNaN(id)) {
+    return res.status(400).json({ error: '無効なIDです' });
+  }
+
+  if (!username && !email) {
+    return res.status(400).json({ error: '更新するフィールドを指定してください' });
+  }
+
+  db.updateUser(id, { username, email }, (err) => {
+    if (err) {
+      if (err.message === 'ユーザーが見つかりません') {
+        return res.status(404).json({ error: err.message });
+      }
+      return res.status(400).json({ error: err.message });
+    }
+    res.json({ message: 'ユーザー情報を更新しました' });
+  });
+});
+
+// ユーザー統計取得エンドポイント
+app.get('/api/users/stats', (req, res) => {
+  db.getUserStats((err, stats) => {
+    if (err) {
+      return res.status(500).json({ error: '統計情報の取得に失敗しました' });
+    }
+    res.json(stats);
   });
 });
 

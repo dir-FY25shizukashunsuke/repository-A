@@ -34,7 +34,7 @@ const registerUser = (username, email, password, callback) => {
       VALUES (?, ?, ?)
     `;
 
-    db.run(query, [username, email, hashedPassword], function(err) {
+    db.run(query, [username, email, hashedPassword], function (err) {
       if (err) {
         if (err.message.includes('UNIQUE constraint failed')) {
           return callback(new Error('ユーザー名またはメールアドレスは既に登録されています'));
@@ -70,10 +70,64 @@ const verifyPassword = (plainPassword, hashedPassword, callback) => {
 // ユーザーを削除（IDで）
 const deleteUserById = (id, callback) => {
   const query = 'DELETE FROM users WHERE id = ?';
-  db.run(query, [id], function(err) {
+  db.run(query, [id], function (err) {
     if (err) return callback(err);
     if (this.changes === 0) return callback(new Error('ユーザーが見つかりません'));
     callback(null);
+  });
+};
+
+// ユーザーをIDで取得
+const getUserById = (id, callback) => {
+  const query = 'SELECT id, username, email, created_at FROM users WHERE id = ?';
+  db.get(query, [id], (err, row) => {
+    if (err) return callback(err);
+    if (!row) return callback(new Error('ユーザーが見つかりません'));
+    callback(null, row);
+  });
+};
+
+// ユーザーを更新
+const updateUser = (id, updates, callback) => {
+  const { username, email } = updates;
+  let query = 'UPDATE users SET ';
+  const params = [];
+  const fields = [];
+
+  if (username) {
+    fields.push('username = ?');
+    params.push(username);
+  }
+  if (email) {
+    fields.push('email = ?');
+    params.push(email);
+  }
+
+  if (fields.length === 0) {
+    return callback(new Error('更新するフィールドが指定されていません'));
+  }
+
+  query += fields.join(', ') + ' WHERE id = ?';
+  params.push(id);
+
+  db.run(query, params, function (err) {
+    if (err) {
+      if (err.message.includes('UNIQUE constraint failed')) {
+        return callback(new Error('ユーザー名またはメールアドレスは既に登録されています'));
+      }
+      return callback(err);
+    }
+    if (this.changes === 0) return callback(new Error('ユーザーが見つかりません'));
+    callback(null);
+  });
+};
+
+// ユーザー統計を取得
+const getUserStats = (callback) => {
+  const query = 'SELECT COUNT(*) as count FROM users';
+  db.get(query, [], (err, row) => {
+    if (err) return callback(err);
+    callback(null, { total_users: row.count });
   });
 };
 
@@ -90,5 +144,8 @@ module.exports = {
   getAllUsers,
   verifyPassword,
   deleteUserById,
+  getUserById,
+  updateUser,
+  getUserStats,
   closeDatabase
 };

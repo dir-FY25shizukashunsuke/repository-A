@@ -103,6 +103,60 @@ def get_users():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# ユーザー一件取得エンドポイント
+@app.route('/api/users/<int:user_id>', methods=['GET'])
+def get_user(user_id):
+    try:
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'error': 'ユーザーが見つかりません'}), 404
+        return jsonify({'user': user.to_dict()}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# ユーザー更新エンドポイント (名前とメールのみ)
+@app.route('/api/users/<int:user_id>', methods=['PATCH'])
+def update_user(user_id):
+    try:
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'error': 'ユーザーが見つかりません'}), 404
+        
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'リクエストボディがありません'}), 400
+        
+        username = data.get('username')
+        email = data.get('email')
+        
+        if not username and not email:
+            return jsonify({'error': '更新するフィールドを指定してください'}), 400
+        
+        if username:
+            if User.query.filter(User.username == username, User.id != user_id).first():
+                return jsonify({'error': 'ユーザー名は既に登録されています'}), 400
+            user.username = username
+        
+        if email:
+            if User.query.filter(User.email == email, User.id != user_id).first():
+                return jsonify({'error': 'メールアドレスは既に登録されています'}), 400
+            user.email = email
+            
+        db.session.commit()
+        return jsonify({'message': 'ユーザー情報を更新しました', 'user': user.to_dict()}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+# ユーザー統計取得エンドポイント
+@app.route('/api/users/stats', methods=['GET'])
+def get_user_stats():
+    try:
+        total_users = User.query.count()
+        return jsonify({'total_users': total_users}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 # ユーザー削除エンドポイント
 @app.route('/api/users/<int:user_id>', methods=['DELETE'])

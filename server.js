@@ -76,24 +76,6 @@ app.get('/api/users', (req, res) => {
   });
 });
 
-// ユーザー一件取得エンドポイント
-app.get('/api/users/:id', (req, res) => {
-  const id = parseInt(req.params.id, 10);
-  if (isNaN(id)) {
-    return res.status(400).json({ error: '無効なIDです' });
-  }
-
-  db.getUserById(id, (err, user) => {
-    if (err) {
-      if (err.message === 'ユーザーが見つかりません') {
-        return res.status(404).json({ error: err.message });
-      }
-      return res.status(500).json({ error: 'ユーザー情報取得に失敗しました' });
-    }
-    res.json({ user });
-  });
-});
-
 // ユーザー更新エンドポイント (名前とメールのみ)
 app.patch('/api/users/:id', (req, res) => {
   const id = parseInt(req.params.id, 10);

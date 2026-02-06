@@ -103,17 +103,6 @@ def get_users():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# ユーザー一件取得エンドポイント
-@app.route('/api/users/<int:user_id>', methods=['GET'])
-def get_user(user_id):
-    try:
-        user = User.query.get(user_id)
-        if not user:
-            return jsonify({'error': 'ユーザーが見つかりません'}), 404
-        return jsonify({'user': user.to_dict()}), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
 # ユーザー更新エンドポイント (名前とメールのみ)
 @app.route('/api/users/<int:user_id>', methods=['PATCH'])
 def update_user(user_id):

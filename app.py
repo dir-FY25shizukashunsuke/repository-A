@@ -148,15 +148,6 @@ def update_user(user_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-# ユーザー統計取得エンドポイント
-@app.route('/api/users/stats', methods=['GET'])
-def get_user_stats():
-    try:
-        total_users = User.query.count()
-        return jsonify({'total_users': total_users}), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
 # エラーハンドリング
 @app.errorhandler(404)
 def not_found(e):

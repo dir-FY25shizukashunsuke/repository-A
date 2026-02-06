@@ -118,16 +118,6 @@ app.patch('/api/users/:id', (req, res) => {
   });
 });
 
-// ユーザー統計取得エンドポイント
-app.get('/api/users/stats', (req, res) => {
-  db.getUserStats((err, stats) => {
-    if (err) {
-      return res.status(500).json({ error: '統計情報の取得に失敗しました' });
-    }
-    res.json(stats);
-  });
-});
-
 // API情報取得エンドポイント
 
 // サーバー起動

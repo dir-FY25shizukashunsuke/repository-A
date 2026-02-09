@@ -6,7 +6,7 @@ on:
 
 jobs:
   dispatch:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Generate GitHub Apps token
         uses: tibdex/github-app-token@v2

@@ -1,3 +1,16 @@
+// ランダムな名言を返すAPI
+const quotes = [
+  '継続は力なり',
+  '失敗は成功のもと',
+  '思い立ったが吉日',
+  '七転び八起き',
+  '急がば回れ'
+];
+
+app.get('/api/quote', (req, res) => {
+  const randomIndex = Math.floor(Math.random() * quotes.length);
+  res.json({ quote: quotes[randomIndex] });
+});
 // サーバーの現在時刻を返すAPI
 const express = require('express');
 const app = express();

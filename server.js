@@ -1,3 +1,13 @@
+// サーバーの現在時刻を返すAPI
+const express = require('express');
+const app = express();
+
+app.get('/api/time', (req, res) => {
+  const now = new Date();
+  res.json({ time: now.toISOString() });
+});
+
+// 既存のサーバー起動処理があればそのまま利用してください
 const express = require('express');
 const bodyParser = require('body-parser');
 const db = require('./db');

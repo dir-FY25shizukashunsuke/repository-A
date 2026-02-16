@@ -1,3 +1,8 @@
+// ランダムな数字を返すAPI
+app.get('/api/random', (req, res) => {
+  const randomNum = Math.floor(Math.random() * 100) + 1;
+  res.json({ number: randomNum });
+});
 // サーバーの稼働時間を返すAPI
 const serverStart = Date.now();
 

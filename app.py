@@ -100,6 +100,19 @@ def get_users():
     users_list = [user.to_dict() for user in users]
     return jsonify({'users': users_list})
 
+@app.route('/api/users/<int:user_id>', methods=['DELETE'])
+def delete_user(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'error': 'ユーザーが見つかりません'}), 404
+    try:
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify({'message': 'ユーザーを削除しました'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
 # ユーザー更新エンドポイント (名前とメールのみ)
 @app.route('/api/users/<int:user_id>', methods=['PATCH'])
 def update_user(user_id):

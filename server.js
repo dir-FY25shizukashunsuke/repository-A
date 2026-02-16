@@ -1,3 +1,10 @@
+// サーバーの稼働時間を返すAPI
+const serverStart = Date.now();
+
+app.get('/api/uptime', (req, res) => {
+  const uptimeSec = Math.floor((Date.now() - serverStart) / 1000);
+  res.json({ uptime: uptimeSec });
+});
 // ランダムな名言を返すAPI
 const quotes = [
   '継続は力なり',

@@ -124,6 +124,30 @@ app.patch('/api/users/:id', (req, res) => {
 
 // API情報取得エンドポイント
 
+// ランダムな色を返すAPI
+app.get('/api/color', (req, res) => {
+  const colors = ['#FF5733', '#33FF57', '#3357FF', '#F033FF', '#FFD700', '#FF1493', '#00CED1', '#FF4500'];
+  const randomColor = colors[Math.floor(Math.random() * colors.length)];
+  res.json({ color: randomColor });
+});
+
+// 簡単な計算API (足し算)
+app.get('/api/calculate', (req, res) => {
+  const { a, b } = req.query;
+  const numA = parseFloat(a);
+  const numB = parseFloat(b);
+  
+  if (isNaN(numA) || isNaN(numB)) {
+    return res.status(400).json({ error: 'パラメータaとbに数値を指定してください' });
+  }
+  
+  res.json({ 
+    a: numA, 
+    b: numB, 
+    sum: numA + numB 
+  });
+});
+
 // サーバー起動
 app.listen(PORT, () => {
   console.log(`サーバーがポート ${PORT} で起動しました`);

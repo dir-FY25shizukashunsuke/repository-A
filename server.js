@@ -148,6 +148,21 @@ app.get('/api/calculate', (req, res) => {
   });
 });
 
+// 今日の運勢を返すAPI
+app.get('/api/fortune', (req, res) => {
+  const fortunes = [
+    { level: '大吉', message: '素晴らしい一日になるでしょう！', luckyNumber: 7 },
+    { level: '中吉', message: '良いことがありそうです。', luckyNumber: 3 },
+    { level: '小吉', message: '穏やかな一日になりそうです。', luckyNumber: 5 },
+    { level: '吉', message: '前向きに過ごしましょう。', luckyNumber: 9 },
+    { level: '末吉', message: '焦らず着実に進みましょう。', luckyNumber: 2 },
+    { level: '凶', message: '慎重に行動すれば大丈夫。', luckyNumber: 1 }
+  ];
+  
+  const randomFortune = fortunes[Math.floor(Math.random() * fortunes.length)];
+  res.json(randomFortune);
+});
+
 // サーバー起動
 app.listen(PORT, () => {
   console.log(`サーバーがポート ${PORT} で起動しました`);

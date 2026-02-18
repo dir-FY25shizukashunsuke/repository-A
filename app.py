@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
 import re
+import requests
 
 app = Flask(__name__)
 
@@ -112,6 +113,85 @@ def delete_user(user_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
+
+# ユーザー名検証エンドポイント（リポジトリBのAPIを呼び出す連携機能）
+@app.route('/api/users/validate-username', methods=['POST'])
+def validate_username():
+    """
+    リポジトリBのAPIを呼び出してユーザー名の詳細分析を行う。
+    両リポジトリにまたがる連携API。
+    """
+    data = request.get_json()
+    
+    if not data or not data.get('username'):
+        return jsonify({'error': 'ユーザー名を指定してください'}), 400
+    
+    username = data.get('username')
+    repo_b_url = data.get('repo_b_url', 'http://localhost:8000')
+    
+    try:
+        # リポジトリBのAPIを複数呼び出して統計情報を取得
+        validation_result = {
+            'username': username,
+            'validations': {}
+        }
+        
+        # 1. 文字列長を取得
+        length_response = requests.post(
+            f'{repo_b_url}/length',
+            json={'text': username},
+            timeout=5
+        )
+        if length_response.status_code == 200:
+            validation_result['validations']['length'] = length_response.json().get('length')
+        
+        # 2. 母音数を取得
+        vowels_response = requests.post(
+            f'{repo_b_url}/count-vowels',
+            json={'text': username},
+            timeout=5
+        )
+        if vowels_response.status_code == 200:
+            validation_result['validations']['vowel_count'] = vowels_response.json().get('vowel_count')
+        
+        # 3. 単語数を取得
+        words_response = requests.post(
+            f'{repo_b_url}/count-words',
+            json={'text': username},
+            timeout=5
+        )
+        if words_response.status_code == 200:
+            validation_result['validations']['word_count'] = words_response.json().get('word_count')
+        
+        # 4. 大文字変換して返す
+        upper_response = requests.post(
+            f'{repo_b_url}/upper',
+            json={'text': username},
+            timeout=5
+        )
+        if upper_response.status_code == 200:
+            validation_result['validations']['uppercase'] = upper_response.json().get('upper')
+        
+        # バリデーション結果を判定
+        length = validation_result['validations'].get('length', 0)
+        if length < 3:
+            validation_result['is_valid'] = False
+            validation_result['message'] = 'ユーザー名は3文字以上である必要があります'
+        elif length > 20:
+            validation_result['is_valid'] = False
+            validation_result['message'] = 'ユーザー名は20文字以下である必要があります'
+        else:
+            validation_result['is_valid'] = True
+            validation_result['message'] = 'ユーザー名は有効です'
+        
+        return jsonify(validation_result), 200
+        
+    except requests.exceptions.Timeout:
+        return jsonify({'error': 'リポジトリBのAPIがタイムアウトしました'}), 504
+    except requests.exceptions.ConnectionError:
+        return jsonify({'error': 'リポジトリBのAPIに接続できません'}), 503
+    except Exception as e:
+        return jsonify({'error': f'バリデーション中にエラーが発生しました: {str(e)}'}), 500
 
 # ユーザー更新エンドポイント (名前とメールのみ)
 @app.route('/api/users/<int:user_id>', methods=['PATCH'])

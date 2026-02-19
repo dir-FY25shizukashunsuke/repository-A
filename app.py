@@ -95,6 +95,80 @@ def register():
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/users/register-analyzed', methods=['POST'])
+def register_analyzed():
+    """
+    ユーザーを登録し、repository-B の /analyze-username を呼び出して
+    ユーザー名の総合分析結果も一緒に返す。
+    両リポジトリにまたがる連携API。
+    """
+    data = request.get_json()
+
+    if not data:
+        return jsonify({'error': 'リクエストボディがありません'}), 400
+
+    username = data.get('username')
+    email = data.get('email')
+    password = data.get('password')
+    password_confirm = data.get('passwordConfirm')
+    repo_b_url = data.get('repo_b_url', 'http://localhost:8000')
+
+    if not username or not email or not password or not password_confirm:
+        return jsonify({'error': 'すべてのフィールドを入力してください'}), 400
+
+    if password != password_confirm:
+        return jsonify({'error': 'パスワードが一致しません'}), 400
+
+    if len(password) < 6:
+        return jsonify({'error': 'パスワードは6文字以上である必要があります'}), 400
+
+    email_regex = r'^[^\s@]+@[^\s@]+\.[^\s@]+$'
+    if not re.match(email_regex, email):
+        return jsonify({'error': '有効なメールアドレスを入力してください'}), 400
+
+    if User.query.filter_by(username=username).first():
+        return jsonify({'error': 'ユーザー名は既に登録されています'}), 400
+
+    if User.query.filter_by(email=email).first():
+        return jsonify({'error': 'メールアドレスは既に登録されています'}), 400
+
+    # repository-B の /analyze-username でユーザー名を事前分析
+    analysis = None
+    try:
+        analysis_response = requests.post(
+            f'{repo_b_url}/analyze-username',
+            json={'username': username},
+            timeout=5
+        )
+        if analysis_response.status_code == 200:
+            analysis = analysis_response.json()
+            if not analysis.get('is_valid_length'):
+                return jsonify({
+                    'error': 'ユーザー名は3〜20文字の範囲で入力してください',
+                    'analysis': analysis
+                }), 400
+    except requests.exceptions.Timeout:
+        return jsonify({'error': 'repository-B の分析APIがタイムアウトしました'}), 504
+    except requests.exceptions.ConnectionError:
+        return jsonify({'error': 'repository-B の分析APIに接続できません'}), 503
+
+    # ユーザーを登録
+    hashed_password = generate_password_hash(password)
+    new_user = User(username=username, email=email, password=hashed_password)
+
+    try:
+        db.session.add(new_user)
+        db.session.commit()
+        return jsonify({
+            'message': 'ユーザーの登録が成功しました',
+            'user': new_user.to_dict(),
+            'username_analysis': analysis
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/api/users', methods=['GET'])
 def get_users():
     users = User.query.all()
